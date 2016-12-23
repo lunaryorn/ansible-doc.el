@@ -118,8 +118,10 @@
     (message "Finding Ansible modules...")
     (with-temp-buffer
       (when (with-demoted-errors "Error while finding Ansible modules: %S"
-              (let ((retcode (call-process "ansible-doc" nil t nil "--list")))
-                (unless (equal retcode 0)
+              (let ((retcode (process-file-shell-command
+                              "env PAGER=cat ansible-doc" nil t nil "--list")))
+                (if (equal retcode 0)
+                    t
                   (error "Command ansible-doc --list failed with code %s, returned %s"
                          retcode (buffer-string)))
                 retcode))
@@ -264,7 +266,7 @@ If NOCONFIRM is non-nil revert without prompt."
       (message "Loading documentation for module %s" module)
       (let ((inhibit-read-only t))
         (erase-buffer)
-        (call-process "ansible-doc" nil t t module)
+        (process-file-shell-command "env PAGER=cat ansible-doc" nil t t module)
         (let ((delete-trailing-lines t))
           (delete-trailing-whitespace))
         (ansible-doc-fontify-yaml-examples))
